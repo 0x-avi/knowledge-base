@@ -49,17 +49,24 @@
 </head>
 <body>
 <main>
-  <nav class="nav"><a href="./">Zettelkasten</a><a href="glossary.html" class="on">Glossary</a><a href="review.html">Review</a></nav>
+  <nav class="nav"><a href="./">Zettelkasten</a><a href="glossary.html" class="on">Glossary</a><a href="graph.html">Graph</a><a href="review.html">Review</a></nav>
   <h1>Glossary</h1>
   <p class="sub">Terms I'm learning, in plain words.</p>
   <input id="q" type="search" placeholder="Search terms…" autocomplete="off">
   <div id="list"></div>
 </main>
+<script src="data.js"></script>
 <script src="terms.js"></script>
 <script>
   const list = document.getElementById("list");
   const q = document.getElementById("q");
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const termSet = new Set(TERMS.map(t => t.term));
+  const related = t => [...new Set([...(t.links || []),
+    ...TERMS.filter(o => (o.links || []).includes(t.term)).map(o => o.term),
+    ...NOTES.filter(n => (n.links || []).includes(t.term)).map(n => n.title)])];
 
   function render(filter = "") {
     const f = filter.trim().toLowerCase();
@@ -67,7 +74,7 @@
       .filter(t => !f || [t.term, t.definition, ...(t.tags || [])].join(" ").toLowerCase().includes(f))
       .sort((a, b) => a.term.localeCompare(b.term));
     list.innerHTML = items.length ? items.map(t => `
-      <article class="entry" id="${esc(t.term.toLowerCase().replace(/\s+/g, "-"))}">
+      <article class="entry" id="${slugify(t.term)}">
         <h2>${esc(t.term)}</h2>
         <p>${esc(t.definition)}</p>
         ${t.example ? `<p class="example">e.g. ${esc(t.example)}</p>` : ""}
@@ -75,6 +82,7 @@
           ${(t.tags || []).map(g => `<span class="tag">${esc(g)}</span>`).join("")}
           ${t.source ? `<a href="${esc(t.source.url)}" target="_blank" rel="noopener">${esc(t.source.title)} ↗</a>` : ""}
         </div>
+        ${related(t).length ? `<p class="example" style="margin-top:8px">Related: ${related(t).map(r => `<a href="${termSet.has(r) ? "#" + slugify(r) : "./#" + slugify(r)}">${esc(r)}</a>`).join(" · ")}</p>` : ""}
       </article>`).join("") : `<p class="empty">No matching terms.</p>`;
   }
   q.addEventListener("input", e => render(e.target.value));

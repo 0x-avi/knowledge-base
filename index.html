@@ -80,7 +80,7 @@
 <body>
 <div class="wrap">
   <header>
-    <nav class="nav"><a href="./" class="on">Zettelkasten</a><a href="glossary.html">Glossary</a><a href="review.html">Review</a></nav>
+    <nav class="nav"><a href="./" class="on">Zettelkasten</a><a href="glossary.html">Glossary</a><a href="graph.html">Graph</a><a href="review.html">Review</a></nav>
     <h1>Zettelkasten</h1>
     <p class="sub">Atomic notes, linked together.</p>
   </header>
@@ -100,6 +100,7 @@
 <dialog id="dlg"><div class="note" id="note"></div></dialog>
 
 <script src="data.js"></script>
+<script src="terms.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -111,6 +112,9 @@
   // Backlinks: notes that link to this one
   const backlinks = {};
   NOTES.forEach(n => (n.links || []).forEach(t => (backlinks[t] ||= []).push(n.title)));
+  TERMS.forEach(t => (t.links || []).forEach(l => (backlinks[l] ||= []).push(t.term)));
+  const termSet = new Set(TERMS.map(t => t.term));
+  const href = t => termSet.has(t) ? `glossary.html#${slug(t)}` : `#${slug(t)}`;
 
   function renderTags() {
     const counts = Object.fromEntries(TAGS.map(t => [t, NOTES.filter(n => n.tags.includes(t)).length]));
@@ -173,7 +177,7 @@
       ${renderBody(n.content)}
       ${src ? `<p>Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.name)} ↗</a> <span class="chip src">${esc(src.type)}</span></p>` : ""}
       ${related.length ? `<div class="links"><div class="section-label">Linked notes</div>
-        ${related.map(t => `<a href="#${slug(t)}">${esc(t)}</a>`).join("")}</div>` : ""}`;
+        ${related.map(t => `<a href="${href(t)}">${esc(t)}${termSet.has(t) ? " (glossary)" : ""}</a>`).join("")}</div>` : ""}`;
     if (!$("dlg").open) $("dlg").showModal();
   }
 

@@ -23,19 +23,23 @@ const TAGS = [
 const NOTES = [
   { title: "Little Endian", tags: ["low-level"], content:
 `• Storing bytes from least-to-most significant
-• eg: 0x12345678 becomes 0x78 0x56 0x34 0x12 & 0x78563412 becomes 0x12, 0x34, 0x56, 0x78` },
+• eg: 0x12345678 becomes 0x78 0x56 0x34 0x12 & 0x78563412 becomes 0x12, 0x34, 0x56, 0x78`,
+    links: ["Offset in program files"] },
 
   { title: "Offset in program files", tags: ["low-level"], content:
 `• A way to identify which byte of a file we are talking about, eg: all files start from 0x0, and the second byte would be offset by 1 thus it would be 0x1` },
 
   { title: "Transactions in Postgres", tags: ["Postgres", "SQL"], content:
-`• Transaction is a set of db operations that either all get run, or none of them get executed` },
+`• Transaction is a set of db operations that either all get run, or none of them get executed`,
+    links: ["SQLite is SQL as a library"] },
 
   { title: "Factory class/function", tags: ["Programming"], content:
-`• Creates something and returns it for you` },
+`• Creates something and returns it for you`,
+    links: ["Dependency Injection", "Mixin"] },
 
   { title: "Mixin", tags: ["Programming"], content:
-`• A small class that adds functionality to another class but is never used individually itself` },
+`• A small class that adds functionality to another class but is never used individually itself`,
+    links: ["Dependency Injection"] },
 
   { title: "Dependency Injection", tags: ["Programming"], content:
 `• Instead of instantiating everything inside the class, the dependencies are provided to the class from elsewhere
@@ -48,7 +52,8 @@ const NOTES = [
 In short: & = define, * = reuse, <<: = merge.` },
 
   { title: "_unhandled_input in Godot is better to use if you have UI elements", tags: ["Godot"], content:
-`• When using the normal _input func it will steal the focus and not let you click the UI elements` },
+`• When using the normal _input func it will steal the focus and not let you click the UI elements`,
+    links: ["Every component is a node in Godot"] },
 
   { title: "IIFE (Immediately Invoked Function Expression)", tags: ["Javascript"], source: "iife", content:
 `• Automatically called right after func def (anonymously defined func with () beside the definition to instantly call it)` },
@@ -66,23 +71,26 @@ In short: & = define, * = reuse, <<: = merge.` },
   { title: "How to reflect on your work", tags: ["Skill-Learning"], content:
 `• Social media is a good indicator, high traffic probably means something is done right or better
 • After you complete your work give some time before you start seeing what you can improve, maybe even visit some old work. Don't do it immediately or you will experience gestaltzerfall`,
-    links: ["To learn anything follow this"] },
+    links: ["To learn anything follow this", "Best Way to Learn Efficiently", "Always focus on the bottleneck"] },
 
   { title: "Do the thing you actually want to get good at", tags: ["Skill-Learning"], content:
-`• eg: wanna learn to draw anime? Draw anime characters, not environments or shapes. Wanna get good at designing websites? Design websites, not mobile UIs etc` },
+`• eg: wanna learn to draw anime? Draw anime characters, not environments or shapes. Wanna get good at designing websites? Design websites, not mobile UIs etc`,
+    links: ["Best Way to Learn Efficiently"] },
 
   { title: "To learn anything follow this", tags: ["Skill-Learning"], content:
 `• DO → REFLECT → LEARN → REPEAT` },
 
   { title: "[ ] vs ( ) routes in Next.js", tags: ["Next.js", "web dev"], content:
 `• [ ] - used to define dynamic routes, eg multi page forms
-• ( ) - used for grouping routes, is invisible in the actual url, but allows creating a different layout.tsx for each` },
+• ( ) - used for grouping routes, is invisible in the actual url, but allows creating a different layout.tsx for each`,
+    links: ["Prefetching Next.js", "Can only use Next Export for static websites"] },
 
   { title: "Prefetching Next.js", tags: ["Next.js", "web dev"], content:
 `• Process of loading a route before user visits it
 • <Link> tag is auto prefetched when in user viewport
 • Static route is fully prefetched
-• Dynamic route is prefetched partially only if loading.tsx is present, otherwise skipped` },
+• Dynamic route is prefetched partially only if loading.tsx is present, otherwise skipped`,
+    links: ["Can only use Next Export for static websites"] },
 
   { title: "Can only use Next Export for static websites", tags: ["Next.js", "web dev"], content:
 `These will fail:
@@ -91,7 +99,8 @@ In short: & = define, * = reuse, <<: = merge.` },
 
   { title: "What is Sampling and Sampling rate?", tags: ["AUDIO", "AI"], source: "hfaudio", content:
 `• Sampling is simply the process of measuring the value of the continuous signal at fixed intervals; after sampling we get a discrete waveform since it is finite and at fixed intervals
-• Sampling rate or sampling frequency is the amount of samples taken per second, measured in Hertz (Hz).` },
+• Sampling rate or sampling frequency is the amount of samples taken per second, measured in Hertz (Hz).`,
+    links: ["The sampling rate is defined by the highest seen frequency", "Standards for sampling rates", "Audio formats mostly differ in compression methods"] },
 
   { title: "The sampling rate is defined by the highest seen frequency", tags: ["AUDIO", "AI"], source: "hfaudio", content:
 `• This is called the Nyquist limit, which is exactly half the sampling rate. eg human speech has an audible range of 8 kHz at max, therefore 16 kHz is able to capture human speech perfectly. Higher sampling rate is not necessary and just increases computation cost. Using an insufficient sample rate, eg 8 kHz, will cause the audio to sound muffled`,
@@ -121,7 +130,8 @@ In short: & = define, * = reuse, <<: = merge.` },
 `• It can use __init__ values to calculate new derived values` },
 
   { title: "HDRIs source", tags: ["Godot"], content:
-`• https://polyhaven.com/` },
+`• https://polyhaven.com/`,
+    links: ["If your game scene looks bad"] },
 
   { title: "If your game scene looks bad", tags: ["Godot"], content:
 `• Are the assets alright?
@@ -136,7 +146,8 @@ In short: & = define, * = reuse, <<: = merge.` },
 • Shift + MB = Pan around object
 • Scroll = Zoom in / Zoom out
 • F = Focus on node
-• Shift + F = Freelook mode` },
+• Shift + F = Freelook mode`,
+    links: ["Every component is a node in Godot", "Press Ctrl+A or the + icon to add a new node to the scene"] },
 
   { title: "Press Ctrl+A or the + icon to add a new node to the scene", tags: ["Godot"], content: ``,
     links: ["Every component is a node in Godot"] },
@@ -159,7 +170,8 @@ In short: & = define, * = reuse, <<: = merge.` },
     links: ["Understanding people better"] },
 
   { title: "Understanding people better", tags: ["Psychology"], source: "understand", content:
-`• If you don't understand what reason a person did something for, ask them why. Never assume anyone has the same psychology as you` },
+`• If you don't understand what reason a person did something for, ask them why. Never assume anyone has the same psychology as you`,
+    links: ["The best mentality"] },
 
   { title: "SQLite is SQL as a library", tags: ["SQL"], source: "sqlite", content:
 `• Rather than running SQLite in a different process/server, we embed the db directly into our program and store all the data in a single file through the library` },
@@ -179,8 +191,10 @@ In short: & = define, * = reuse, <<: = merge.` },
   { title: "The Reinforcement Learning Loop", tags: ["RL", "AI"], source: "openenv", content:
 `• Observe → Act → Reward → Repeat` },
 
-  { title: "OpenEnv uses WebSockets under the hood for all env functions", tags: ["RL", "AI"], source: "openenv", content: `` },
+  { title: "OpenEnv uses WebSockets under the hood for all env functions", tags: ["RL", "AI"], source: "openenv", content: ``,
+    links: ["The Reinforcement Learning Loop"] },
 
   { title: "32-bit (FP32) is considered full precision", tags: ["AI"], source: "quant", content:
-`• Lower-bit formats like FP16, BF16 and INT8 are reduced precision` },
+`• Lower-bit formats like FP16, BF16 and INT8 are reduced precision`,
+    links: ["Precision", "Dynamic range", "Mantissa"] },
 ];
