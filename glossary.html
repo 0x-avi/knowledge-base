@@ -67,8 +67,10 @@
   <input id="q" type="search" placeholder="Search terms…" autocomplete="off">
   <div id="list" data-math></div>
 </main>
-<script src="data.js"></script>
-<script src="terms.js"></script>
+<script>
+  // Always load the latest notes (GitHub Pages caches files for 10 minutes)
+  document.write(["data.js", "terms.js"].map(f => `<script src="${f}?t=${Date.now()}"><\/script>`).join(""));
+</script>
 <script>
   const list = document.getElementById("list");
   const q = document.getElementById("q");

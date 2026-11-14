@@ -114,8 +114,10 @@
 </div>
 <dialog id="dlg"><div class="note" id="note" data-math></div></dialog>
 
-<script src="data.js"></script>
-<script src="terms.js"></script>
+<script>
+  // Always load the latest notes (GitHub Pages caches files for 10 minutes)
+  document.write(["data.js", "terms.js"].map(f => `<script src="${f}?t=${Date.now()}"><\/script>`).join(""));
+</script>
 <script>
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
