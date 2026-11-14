@@ -19,3 +19,7 @@ Append to `NOTES` in [`data.js`](data.js):
 - New source → add it to `SOURCES` with `name`, `url`, `type`.
 
 Commit and push; GitHub Pages redeploys automatically.
+
+## Glossary
+
+A second page at https://0x-avi.github.io/zettelkasten/glossary.html. Add a term by appending to `TERMS` in [`terms.js`](terms.js).

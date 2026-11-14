@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary</title>
+<style>
+  :root {
+    --bg: #fafaf8; --card: #ffffff; --text: #1c1c1a; --muted: #6b6b66;
+    --border: #e4e4df; --accent: #2f5bd3; --tag: #eef1fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --card: #1d1d1b; --text: #ececea; --muted: #9a9a94;
+      --border: #2e2e2b; --accent: #8aa7ff; --tag: #232838;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 48px 16px 80px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  input {
+    width: 100%; padding: 12px 14px; font-size: 16px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    outline: none; margin-bottom: 24px;
+  }
+  input:focus { border-color: var(--accent); }
+  .entry {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 14px;
+  }
+  .entry h2 { font-size: 19px; margin: 0 0 6px; }
+  .entry p { margin: 0 0 8px; }
+  .example { color: var(--muted); font-size: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+  .tag { background: var(--tag); padding: 2px 8px; border-radius: 999px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .empty { color: var(--muted); text-align: center; padding: 32px 0; }
+  .nav { display: flex; gap: 4px; margin-bottom: 20px; }
+  .nav a { padding: 6px 12px; border-radius: 8px; color: var(--muted); font-size: 14px; }
+  .nav a:hover { text-decoration: none; background: var(--border); }
+  .nav a.on { background: var(--text); color: var(--bg); }
+</style>
+</head>
+<body>
+<main>
+  <nav class="nav"><a href="./">Zettelkasten</a><a href="glossary.html" class="on">Glossary</a></nav>
+  <h1>Glossary</h1>
+  <p class="sub">Terms I'm learning, in plain words.</p>
+  <input id="q" type="search" placeholder="Search terms…" autocomplete="off">
+  <div id="list"></div>
+</main>
+<script src="terms.js"></script>
+<script>
+  const list = document.getElementById("list");
+  const q = document.getElementById("q");
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function render(filter = "") {
+    const f = filter.trim().toLowerCase();
+    const items = TERMS
+      .filter(t => !f || [t.term, t.definition, ...(t.tags || [])].join(" ").toLowerCase().includes(f))
+      .sort((a, b) => a.term.localeCompare(b.term));
+    list.innerHTML = items.length ? items.map(t => `
+      <article class="entry" id="${esc(t.term.toLowerCase().replace(/\s+/g, "-"))}">
+        <h2>${esc(t.term)}</h2>
+        <p>${esc(t.definition)}</p>
+        ${t.example ? `<p class="example">e.g. ${esc(t.example)}</p>` : ""}
+        <div class="meta">
+          ${(t.tags || []).map(g => `<span class="tag">${esc(g)}</span>`).join("")}
+          ${t.source ? `<a href="${esc(t.source.url)}" target="_blank" rel="noopener">${esc(t.source.title)} ↗</a>` : ""}
+        </div>
+      </article>`).join("") : `<p class="empty">No matching terms.</p>`;
+  }
+  q.addEventListener("input", e => render(e.target.value));
+  render();
+</script>
+</body>
+</html>

@@ -71,11 +71,16 @@
     .tags { display: flex; flex-wrap: wrap; gap: 6px; }
     .tags button { width: auto; gap: 6px; background: var(--chip); }
   }
+  .nav { display: flex; gap: 4px; margin-bottom: 20px; }
+  .nav a { padding: 6px 12px; border-radius: 8px; color: var(--muted); font-size: 14px; }
+  .nav a:hover { text-decoration: none; background: var(--border); }
+  .nav a.on { background: var(--text); color: var(--bg); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
+    <nav class="nav"><a href="./" class="on">Zettelkasten</a><a href="glossary.html">Glossary</a></nav>
     <h1>Zettelkasten</h1>
     <p class="sub">Atomic notes, linked together.</p>
   </header>
