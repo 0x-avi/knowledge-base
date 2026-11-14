@@ -9,6 +9,7 @@ const SOURCES = {
   understand: { name: "Why You Don't Understand Others", url: "https://medium.com/@jjbartholomew/why-you-dont-understand-others-it-s-because-you-re-not-actually-trying-d65d71a023af", type: "Article" },
   sqlite: { name: "Should I Use SQLite?", url: "https://blog.wesleyac.com/posts/consider-sqlite", type: "Article" },
   stm: { name: "Short-term memory implementation", url: "https://oneuptime.com/blog/post/2026-01-30-short-term-memory/view#core-components-of-short-term-memory", type: "Article" },
+  quant: { name: "A Visual Guide to Quantization", url: "https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-quantization", type: "Article" },
   openenv: { name: "OpenEnv Course — Module 1", url: "https://github.com/raun/openenv-course/blob/main/module-1/README.md", type: "Website" },
 };
 
@@ -180,4 +181,6 @@ In short: & = define, * = reuse, <<: = merge.` },
 
   { title: "OpenEnv uses WebSockets under the hood for all env functions", tags: ["RL", "AI"], source: "openenv", content: `` },
 
+  { title: "32-bit (FP32) is considered full precision", tags: ["AI"], source: "quant", content:
+`• Lower-bit formats like FP16, BF16 and INT8 are reduced precision` },
 ];
