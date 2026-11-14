@@ -76,6 +76,18 @@
   .nav a:hover { text-decoration: none; background: var(--border); }
   .nav a.on { background: var(--text); color: var(--bg); }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/contrib/auto-render.min.js"></script>
+<script>
+  // Render $inline$ and $$display$$ LaTeX inside an element (no-op until KaTeX loads)
+  function math(el) {
+    if (!el || !window.renderMathInElement) return;
+    renderMathInElement(el, { throwOnError: false, delimiters: [
+      { left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }] });
+  }
+  window.addEventListener("load", () => document.querySelectorAll("[data-math]").forEach(math));
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -94,10 +106,10 @@
       <select id="src"><option value="">All sources</option></select>
     </div>
     <p class="count" id="count"></p>
-    <div class="grid" id="grid"></div>
+    <div class="grid" id="grid" data-math></div>
   </main>
 </div>
-<dialog id="dlg"><div class="note" id="note"></div></dialog>
+<dialog id="dlg"><div class="note" id="note" data-math></div></dialog>
 
 <script src="data.js"></script>
 <script src="terms.js"></script>
@@ -129,7 +141,7 @@
   }
 
   function preview(content) {
-    return content.replace(/^•\s*/gm, "").replace(/\n/g, " · ");
+    return content.trim().replace(/\$\$([^$]+)\$\$/g, "$$$1$$").replace(/^•\s*/gm, "").replace(/\n/g, " · ");
   }
 
   function renderGrid() {
@@ -148,6 +160,7 @@
           ${n.source ? `<span class="chip src">${esc(SOURCES[n.source].name)}</span>` : ""}
         </div>
       </article>`).join("") : `<p class="empty">No notes match.</p>`;
+    math($("grid"));
   }
 
   function renderBody(content) {
@@ -178,6 +191,7 @@
       ${src ? `<p>Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.name)} ↗</a> <span class="chip src">${esc(src.type)}</span></p>` : ""}
       ${related.length ? `<div class="links"><div class="section-label">Linked notes</div>
         ${related.map(t => `<a href="${href(t)}">${esc(t)}${termSet.has(t) ? " (glossary)" : ""}</a>`).join("")}</div>` : ""}`;
+    math($("note"));
     if (!$("dlg").open) $("dlg").showModal();
   }
 

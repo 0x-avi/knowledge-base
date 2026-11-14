@@ -2,6 +2,7 @@
 // content: lines starting with "• " render as bullets.
 // tags: names from TAGS. source: a key from SOURCES (optional).
 // links: titles of related notes (optional) — shown as clickable links.
+// LaTeX: $inline$ or $$display$$ (use String.raw`...` so backslashes survive).
 
 const SOURCES = {
   iife: { name: "MDN — IIFE", url: "https://developer.mozilla.org/en-US/docs/Glossary/IIFE", type: "Website" },
@@ -14,7 +15,7 @@ const SOURCES = {
 };
 
 const TAGS = [
-  "AI", "AUDIO", "LLM", "RL", "Diffusion", "GANs", "GPU/CUDA",
+  "AI", "Quantization", "AUDIO", "LLM", "RL", "Diffusion", "GANs", "GPU/CUDA",
   "Skill-Learning", "Psychology",
   "python", "Javascript", "Programming", "low-level", "SQL", "Postgres",
   "Docker", "YAML", "Next.js", "web dev", "Godot",
@@ -194,7 +195,48 @@ In short: & = define, * = reuse, <<: = merge.` },
   { title: "OpenEnv uses WebSockets under the hood for all env functions", tags: ["RL", "AI"], source: "openenv", content: ``,
     links: ["The Reinforcement Learning Loop"] },
 
-  { title: "32-bit (FP32) is considered full precision", tags: ["AI"], source: "quant", content:
+  { title: "32-bit (FP32) is considered full precision", tags: ["AI", "Quantization"], source: "quant", content:
 `• Lower-bit formats like FP16, BF16 and INT8 are reduced precision`,
     links: ["Precision", "Dynamic range", "Mantissa"] },
+  { title: "Symmetric quantization is centered around zero", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• The float range is mapped to a range that is symmetric around 0, so 0 in float space is exactly 0 in quantized space
+• Absmax quantization is the classic example`,
+    links: ["Absmax (absolute maximum) quantization", "32-bit (FP32) is considered full precision"] },
+
+  { title: "Absmax (absolute maximum) quantization", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• A symmetric quantization: take the highest absolute value $\alpha$ in the tensor and treat $[-\alpha, \alpha]$ as the range
+• Everything is mapped linearly into the $b$-bit integer range, centered on 0
+$$\alpha = \max |x|$$
+Worked example (FP32 → INT8):
+• Values: $[5.47,\ 3.08,\ -7.59,\ 0,\ -1.95,\ -4.57,\ 10.8]$, so $\alpha = 10.8$ and the range is $[-10.8,\ 10.8]$
+• Scale: $s = 127 / 10.8 \approx 11.76$
+• Quantized: $[64,\ 36,\ -89,\ 0,\ -23,\ -54,\ 127]$; $\alpha$ lands exactly on 127, the highest value INT8 can take
+• $0$ in FP32 $= 0$ in INT8`,
+    links: ["Absmax scale factor", "Symmetric quantization is centered around zero"] },
+
+  { title: "Absmax scale factor", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Computed from $\alpha$ (the highest absolute value) and the bit width $b$
+$$s = \frac{2^{b-1} - 1}{\alpha}$$
+• eg for INT8: $s = 127 / \alpha$`,
+    links: ["Quantizing with absmax", "Dequantizing with absmax"] },
+
+  { title: "Quantizing with absmax", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Multiply the value by the scale factor, then round to the nearest integer
+$$x_q = \operatorname{round}(s \cdot x)$$`,
+    links: ["Dequantizing with absmax"] },
+
+  { title: "Dequantizing with absmax", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Divide the quantized value by the same scale factor to get back an approximate float
+$$\hat{x} = \frac{x_q}{s}$$
+• The result is close to, but not exactly, the original value`,
+    links: ["Quantization error"] },
+
+  { title: "Quantization error", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• The information lost when you quantize and then dequantize: the gap between the original value and its dequantized version
+$$e = x - \hat{x}$$`,
+    links: ["Fewer bits means more quantization error", "Precision"] },
+
+  { title: "Fewer bits means more quantization error", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Fewer bits give fewer integer levels to map onto, so neighbouring floats get rounded to the same value more often`,
+    links: ["Dynamic range", "Precision"] },
 ];

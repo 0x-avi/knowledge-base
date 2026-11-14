@@ -46,6 +46,18 @@
   .nav a:hover { text-decoration: none; background: var(--border); }
   .nav a.on { background: var(--text); color: var(--bg); }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/contrib/auto-render.min.js"></script>
+<script>
+  // Render $inline$ and $$display$$ LaTeX inside an element (no-op until KaTeX loads)
+  function math(el) {
+    if (!el || !window.renderMathInElement) return;
+    renderMathInElement(el, { throwOnError: false, delimiters: [
+      { left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }] });
+  }
+  window.addEventListener("load", () => document.querySelectorAll("[data-math]").forEach(math));
+</script>
 </head>
 <body>
 <main>
@@ -53,7 +65,7 @@
   <h1>Glossary</h1>
   <p class="sub">Terms I'm learning, in plain words.</p>
   <input id="q" type="search" placeholder="Search terms…" autocomplete="off">
-  <div id="list"></div>
+  <div id="list" data-math></div>
 </main>
 <script src="data.js"></script>
 <script src="terms.js"></script>
@@ -84,6 +96,7 @@
         </div>
         ${related(t).length ? `<p class="example" style="margin-top:8px">Related: ${related(t).map(r => `<a href="${termSet.has(r) ? "#" + slugify(r) : "./#" + slugify(r)}">${esc(r)}</a>`).join(" · ")}</p>` : ""}
       </article>`).join("") : `<p class="empty">No matching terms.</p>`;
+    math(list);
   }
   q.addEventListener("input", e => render(e.target.value));
   render();

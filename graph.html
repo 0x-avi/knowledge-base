@@ -7,12 +7,12 @@
 <style>
   :root {
     --bg: #fafaf8; --panel: #ffffff; --text: #1c1c1a; --muted: #6b6b66;
-    --border: #e4e4df; --accent: #2f5bd3; --edge: #c9c9c2;
+    --border: #e4e4df; --accent: #2f5bd3; --edge: #c9c9c2; --chip: #eef1fb;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #141413; --panel: #1d1d1b; --text: #ececea; --muted: #9a9a94;
-      --border: #2e2e2b; --accent: #8aa7ff; --edge: #3d3d39;
+      --border: #2e2e2b; --accent: #8aa7ff; --edge: #45453f; --chip: #232838;
     }
   }
   * { box-sizing: border-box; }
@@ -28,22 +28,23 @@
   .nav a.on { background: var(--text); color: var(--bg); }
   h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
   .sub { color: var(--muted); margin: 2px 0 10px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+  select, button { font: inherit; font-size: 14px; padding: 7px 10px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; }
   .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
   .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   .legend i.sq { border-radius: 2px; }
-  #wrap { flex: 1; position: relative; min-height: 420px; max-width: 1120px; width: 100%; margin: 0 auto 16px;
-    border: 1px solid var(--border); border-radius: 14px; background: var(--panel); overflow: hidden; }
-  svg { width: 100%; height: 100%; display: block; cursor: grab; }
-  svg:active { cursor: grabbing; }
-  .link { stroke: var(--edge); stroke-width: 1.4; }
-  .node { cursor: pointer; stroke: var(--panel); stroke-width: 2; }
-  .label { font-size: 11px; fill: var(--text); pointer-events: none; paint-order: stroke;
-    stroke: var(--panel); stroke-width: 3px; }
-  .dim { opacity: .12; }
-  #tip { position: absolute; pointer-events: none; background: var(--text); color: var(--bg);
-    font-size: 12px; padding: 6px 9px; border-radius: 8px; max-width: 260px; display: none; }
-  .hint { position: absolute; bottom: 10px; right: 14px; font-size: 12px; color: var(--muted); }
+  #wrap { flex: 1; position: relative; min-height: 440px; max-width: 1120px; width: calc(100% - 32px);
+    margin: 0 auto 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); overflow: hidden; }
+  #graph { position: absolute; inset: 0; }
+  #focus { position: absolute; top: 12px; left: 12px; max-width: 300px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: none; z-index: 2; }
+  #focus b { display: block; line-height: 1.35; margin-bottom: 6px; }
+  #focus .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  #focus .chip { background: var(--chip); padding: 0 7px; border-radius: 999px; font-size: 12px; }
+  #focus .row { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .hint { position: absolute; bottom: 10px; right: 14px; font-size: 12px; color: var(--muted); z-index: 2; }
 </style>
 </head>
 <body>
@@ -51,23 +52,30 @@
   <nav class="nav"><a href="./">Zettelkasten</a><a href="glossary.html">Glossary</a><a href="graph.html" class="on">Graph</a><a href="review.html">Review</a></nav>
   <h1>Knowledge Graph</h1>
   <p class="sub" id="sub"></p>
+  <div class="controls">
+    <select id="src" aria-label="Filter by resource"><option value="">All resources</option></select>
+    <button id="reset" hidden>Show all nodes</button>
+  </div>
   <div class="legend" id="legend"></div>
 </header>
 <div id="wrap">
-  <svg id="svg"></svg>
-  <div id="tip"></div>
-  <div class="hint">Drag to move · scroll to zoom · hover to focus · click to open</div>
+  <div id="graph"></div>
+  <div id="focus"></div>
+  <div class="hint">Click a node to see its connections · click empty space to reset · scroll to zoom</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/force-graph@1.52.0/dist/force-graph.min.js"></script>
 <script src="data.js"></script>
 <script src="terms.js"></script>
 <script>
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
   // Topic groups → colors (first matching tag wins)
   const GROUPS = [
-    ["AI / ML", ["AUDIO", "LLM", "RL", "AI", "Diffusion", "GANs", "GPU/CUDA"], "#4c78d8"],
+    ["AI / ML", ["Quantization", "AUDIO", "LLM", "RL", "AI", "Diffusion", "GANs", "GPU/CUDA"], "#4c78d8"],
     ["Learning & mindset", ["Skill-Learning", "Psychology"], "#d8774c"],
     ["Web", ["Next.js", "web dev", "Javascript"], "#3fa66b"],
     ["Programming & systems", ["python", "Programming", "low-level", "SQL", "Postgres", "Docker", "YAML"], "#9b5fc0"],
@@ -75,91 +83,107 @@
   ];
   const groupOf = tags => GROUPS.find(g => g[1].some(t => tags.includes(t))) || ["Other", [], "#888"];
 
-  const nodes = [
-    ...NOTES.map(n => ({ id: n.title, kind: "note", tags: n.tags, url: "./#" + slug(n.title) })),
-    ...TERMS.map(t => ({ id: t.term, kind: "term", tags: t.tags || [], url: "glossary.html#" + slug(t.term) })),
+  // Glossary terms reference sources by object; map them back to a SOURCES key by URL
+  const srcKeyByUrl = Object.fromEntries(Object.entries(SOURCES).map(([k, s]) => [s.url, k]));
+
+  const ALL_NODES = [
+    ...NOTES.map(n => ({ id: n.title, kind: "note", tags: n.tags, source: n.source || "", url: "./#" + slug(n.title) })),
+    ...TERMS.map(t => ({ id: t.term, kind: "term", tags: t.tags || [], source: t.source ? srcKeyByUrl[t.source.url] || "" : "",
+      url: "glossary.html#" + slug(t.term) })),
   ];
-  const ids = new Set(nodes.map(n => n.id));
-  const seen = new Set();
-  const links = [];
+  const byId = new Map(ALL_NODES.map(n => [n.id, n]));
+  const seen = new Set(), ALL_LINKS = [];
   [...NOTES.map(n => [n.title, n.links]), ...TERMS.map(t => [t.term, t.links])].forEach(([a, ls]) =>
     (ls || []).forEach(b => {
       const k = [a, b].sort().join("→");
-      if (ids.has(b) && !seen.has(k)) { seen.add(k); links.push({ source: a, target: b }); }
+      if (byId.has(b) && !seen.has(k)) { seen.add(k); ALL_LINKS.push({ source: a, target: b }); }
     }));
 
-  const degree = {};
-  links.forEach(l => { degree[l.source] = (degree[l.source] || 0) + 1; degree[l.target] = (degree[l.target] || 0) + 1; });
-  nodes.forEach(n => { n.deg = degree[n.id] || 0; n.color = groupOf(n.tags)[2]; });
-  const r = n => 5 + Math.sqrt(n.deg) * 3;
+  const nbrs = new Map(ALL_NODES.map(n => [n.id, new Set()]));
+  ALL_LINKS.forEach(l => { nbrs.get(l.source).add(l.target); nbrs.get(l.target).add(l.source); });
+  ALL_NODES.forEach(n => { n.deg = nbrs.get(n.id).size; n.color = groupOf(n.tags)[2]; n.r = 4 + Math.sqrt(n.deg) * 2.2; });
 
-  document.getElementById("sub").textContent =
-    `${NOTES.length} notes · ${TERMS.length} glossary terms · ${links.length} links`;
-  document.getElementById("legend").innerHTML =
-    GROUPS.map(g => `<span><i style="background:${g[2]}"></i>${g[0]}</span>`).join("") +
-    `<span><i class="sq" style="background:var(--muted)"></i>Glossary term</span>`;
+  $("sub").textContent = `${NOTES.length} notes · ${TERMS.length} glossary terms · ${ALL_LINKS.length} links`;
+  $("legend").innerHTML = GROUPS.map(g => `<span><i style="background:${g[2]}"></i>${g[0]}</span>`).join("") +
+    `<span><i class="sq" style="background:var(--muted)"></i>Square = glossary term</span>`;
+  $("src").innerHTML += Object.entries(SOURCES)
+    .filter(([k]) => ALL_NODES.some(n => n.source === k))
+    .map(([k, s]) => `<option value="${k}">${esc(s.name)} (${ALL_NODES.filter(n => n.source === k).length})</option>`).join("");
 
-  const svg = d3.select("#svg");
-  const wrap = document.getElementById("wrap");
-  const W = () => wrap.clientWidth, H = () => wrap.clientHeight;
-  const g = svg.append("g");
-  svg.call(d3.zoom().scaleExtent([0.3, 4]).on("zoom", e => g.attr("transform", e.transform)));
+  const state = { focus: null, src: "" };
 
-  const sim = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(60).strength(0.7))
-    .force("charge", d3.forceManyBody().strength(-160))
-    .force("center", d3.forceCenter(W() / 2, H() / 2))
-    .force("x", d3.forceX(W() / 2).strength(0.06))
-    .force("y", d3.forceY(H() / 2).strength(0.08))
-    .force("collide", d3.forceCollide(d => r(d) + 4));
+  const Graph = ForceGraph()($("graph"))
+    .backgroundColor("rgba(0,0,0,0)")
+    .nodeId("id")
+    .nodeRelSize(1)
+    .nodeVal(n => n.r * n.r)
+    .linkColor(() => css("--edge"))
+    .linkWidth(1.2)
+    .cooldownTicks(120)
+    .nodeCanvasObject((n, ctx, scale) => {
+      ctx.fillStyle = n.color;
+      ctx.beginPath();
+      if (n.kind === "term") ctx.rect(n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
+      else ctx.arc(n.x, n.y, n.r, 0, 2 * Math.PI);
+      ctx.fill();
+      if (state.focus === n.id) { ctx.lineWidth = 2 / scale; ctx.strokeStyle = css("--text"); ctx.stroke(); }
+      // Labels: always in focus/filter views, otherwise once zoomed in a bit
+      if (state.focus || state.src || scale > 1.4) {
+        const label = n.id.length > 40 ? n.id.slice(0, 38) + "…" : n.id;
+        const fs = 11 / scale;
+        ctx.font = `${fs}px -apple-system, sans-serif`;
+        ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.lineWidth = 3 / scale; ctx.strokeStyle = css("--panel"); ctx.strokeText(label, n.x, n.y + n.r + 2 / scale);
+        ctx.fillStyle = css("--text"); ctx.fillText(label, n.x, n.y + n.r + 2 / scale);
+      }
+    })
+    .nodePointerAreaPaint((n, color, ctx) => {
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, 0, 2 * Math.PI); ctx.fill();
+    })
+    .nodeLabel(n => `${esc(n.id)}${n.kind === "term" ? " (glossary)" : ""}`)
+    .onNodeClick(n => { state.focus = n.id; update(); })
+    .onBackgroundClick(() => { if (state.focus) { state.focus = null; update(); } });
 
-  const link = g.append("g").selectAll("line").data(links).join("line").attr("class", "link");
+  Graph.d3Force("charge").strength(-60);
+  Graph.d3Force("link").distance(40);
 
-  const node = g.append("g").selectAll("path").data(nodes).join("path")
-    .attr("class", "node")
-    .attr("d", d => d.kind === "term"
-      ? d3.symbol(d3.symbolSquare, Math.pow(r(d) * 1.9, 2))()
-      : d3.symbol(d3.symbolCircle, Math.PI * r(d) * r(d))())
-    .attr("fill", d => d.color)
-    .call(d3.drag()
-      .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
-    .on("click", (e, d) => { location.href = d.url; });
+  function update() {
+    let visible = ALL_NODES;
+    if (state.src) visible = visible.filter(n => n.source === state.src);
+    if (state.focus) {
+      const keep = new Set([state.focus, ...nbrs.get(state.focus)]);
+      visible = ALL_NODES.filter(n => keep.has(n.id)); // focus shows all connections, across resources
+    }
+    const ids = new Set(visible.map(n => n.id));
+    const links = ALL_LINKS
+      .map(l => ({ source: l.source.id ?? l.source, target: l.target.id ?? l.target }))
+      .filter(l => ids.has(l.source) && ids.has(l.target));
+    Graph.graphData({ nodes: visible, links });
+    renderFocus();
+    $("reset").hidden = !state.focus && !state.src;
+    setTimeout(() => Graph.zoomToFit(500, 60), 350);
+  }
 
-  const short = s => s.length > 34 ? s.slice(0, 32) + "…" : s;
-  const label = g.append("g").selectAll("text").data(nodes).join("text")
-    .attr("class", "label").attr("dy", d => r(d) + 12).attr("text-anchor", "middle").text(d => short(d.id));
+  function renderFocus() {
+    const n = state.focus && byId.get(state.focus);
+    if (!n) { $("focus").style.display = "none"; return; }
+    const src = n.source && SOURCES[n.source];
+    $("focus").style.display = "block";
+    $("focus").innerHTML = `
+      <b>${esc(n.id)}</b>
+      <div class="chips">${n.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}${n.kind === "term" ? `<span class="chip">glossary</span>` : ""}</div>
+      ${src ? `<div style="font-size:13px;color:var(--muted);margin-bottom:8px">From ${esc(src.name)}</div>` : ""}
+      <div class="row"><a href="${n.url}">Open ${n.kind === "term" ? "term" : "note"} →</a>
+        <span style="color:var(--muted)">${n.deg} connection${n.deg === 1 ? "" : "s"}</span></div>`;
+  }
 
-  // Hover: focus a node and its neighbours
-  const nbrs = new Map(nodes.map(n => [n.id, new Set([n.id])]));
-  links.forEach(l => { nbrs.get(l.source.id ?? l.source).add(l.target.id ?? l.target); nbrs.get(l.target.id ?? l.target).add(l.source.id ?? l.source); });
-  const tip = document.getElementById("tip");
-  node.on("mouseenter", (e, d) => {
-    const set = nbrs.get(d.id);
-    node.classed("dim", n => !set.has(n.id));
-    label.classed("dim", n => !set.has(n.id));
-    link.classed("dim", l => l.source.id !== d.id && l.target.id !== d.id);
-    tip.style.display = "block";
-    tip.textContent = d.id + (d.kind === "term" ? " (glossary)" : "") + (d.tags.length ? " · " + d.tags.join(", ") : "");
-  }).on("mousemove", e => {
-    const b = wrap.getBoundingClientRect();
-    tip.style.left = (e.clientX - b.left + 12) + "px"; tip.style.top = (e.clientY - b.top + 12) + "px";
-  }).on("mouseleave", () => {
-    node.classed("dim", false); label.classed("dim", false); link.classed("dim", false);
-    tip.style.display = "none";
-  });
+  $("src").addEventListener("change", e => { state.src = e.target.value; state.focus = null; update(); });
+  $("reset").addEventListener("click", () => { state.src = ""; state.focus = null; $("src").value = ""; update(); });
 
-  sim.on("tick", () => {
-    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-    node.attr("transform", d => `translate(${d.x},${d.y})`);
-    label.attr("x", d => d.x).attr("y", d => d.y);
-  });
-
-  window.addEventListener("resize", () => {
-    sim.force("center", d3.forceCenter(W() / 2, H() / 2)).force("x", d3.forceX(W() / 2).strength(0.06))
-      .force("y", d3.forceY(H() / 2).strength(0.08)).alpha(0.3).restart();
-  });
+  const fit = () => { const r = $("wrap").getBoundingClientRect(); Graph.width(r.width).height(r.height); };
+  window.addEventListener("resize", fit);
+  fit();
+  update();
 </script>
 </body>
 </html>
