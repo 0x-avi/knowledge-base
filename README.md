@@ -1,6 +1,6 @@
-# Zettelkasten
+# Knowledge Base
 
-My personal Zettelkasten, live at https://0x-avi.github.io/zettelkasten/.
+My personal Zettelkasten, live at https://0x-avi.github.io/knowledge-base/.
 
 Notes are atomic, tagged, optionally tied to a source, and linked to each other (backlinks show up automatically).
 
@@ -22,4 +22,4 @@ Commit and push; GitHub Pages redeploys automatically.
 
 ## Glossary
 
-A second page at https://0x-avi.github.io/zettelkasten/glossary.html. Add a term by appending to `TERMS` in [`terms.js`](terms.js).
+A second page at https://0x-avi.github.io/knowledge-base/glossary.html. Add a term by appending to `TERMS` in [`terms.js`](terms.js).
