@@ -2,6 +2,7 @@
 // content: lines starting with "• " render as bullets.
 // tags: names from TAGS. source: a key from SOURCES (optional).
 // links: titles of related notes (optional) — shown as clickable links.
+// images: [{ src, caption }] (optional) — shown in the note, credited to its source.
 // LaTeX: $inline$ or $$display$$ (use String.raw`...` so backslashes survive).
 
 const SOURCES = {
@@ -201,7 +202,7 @@ In short: & = define, * = reuse, <<: = merge.` },
   { title: "Symmetric quantization is centered around zero", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
 • The float range is mapped to a range that is symmetric around 0, so 0 in float space is exactly 0 in quantized space
 • Absmax quantization is the classic example`,
-    links: ["Absmax (absolute maximum) quantization", "32-bit (FP32) is considered full precision"] },
+    links: ["Absmax (absolute maximum) quantization", "32-bit (FP32) is considered full precision", "Zero-point quantization is asymmetric"] },
 
   { title: "Absmax (absolute maximum) quantization", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
 • A symmetric quantization: take the highest absolute value $\alpha$ in the tensor and treat $[-\alpha, \alpha]$ as the range
@@ -212,12 +213,14 @@ Worked example (FP32 → INT8):
 • Scale: $s = 127 / 10.8 \approx 11.76$
 • Quantized: $[64,\ 36,\ -89,\ 0,\ -23,\ -54,\ 127]$; $\alpha$ lands exactly on 127, the highest value INT8 can take
 • $0$ in FP32 $= 0$ in INT8`,
+    images: [{ src: "https://substack-post-media.s3.amazonaws.com/public/images/782beaa8-340f-45b8-ba7f-20491f66867a_1172x848.png", caption: "Absmax: [-α, α] maps onto [-127, 127]; 0 stays 0" }],
     links: ["Absmax scale factor", "Symmetric quantization is centered around zero"] },
 
   { title: "Absmax scale factor", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
 • Computed from $\alpha$ (the highest absolute value) and the bit width $b$
 $$s = \frac{2^{b-1} - 1}{\alpha}$$
 • eg for INT8: $s = 127 / \alpha$`,
+    images: [{ src: "https://substack-post-media.s3.amazonaws.com/public/images/7cc76e35-13bf-4d6f-94bf-dbe4725c084f_1644x486.png", caption: "Absmax scale factor and quantization" }],
     links: ["Quantizing with absmax", "Dequantizing with absmax"] },
 
   { title: "Quantizing with absmax", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
@@ -239,4 +242,27 @@ $$e = x - \hat{x}$$`,
   { title: "Fewer bits means more quantization error", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
 • Fewer bits give fewer integer levels to map onto, so neighbouring floats get rounded to the same value more often`,
     links: ["Dynamic range", "Precision"] },
+  { title: "Zero-point quantization is asymmetric", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Maps the actual min $\beta$ and max $\alpha$ of the values onto the full integer range, eg $[-128, 127]$ for INT8, instead of a range mirrored around 0
+• Uses the whole integer range even when values are lopsided, but 0 in FP32 no longer lands on 0 in INT8; it shifts by the zero point $z$`,
+    images: [{ src: "https://substack-post-media.s3.amazonaws.com/public/images/8ffa0c54-88bf-45c1-8636-bdb097bb8e6b_1172x848.png", caption: "Zero-point: [β, α] maps onto [-128, 127]; 0 lands on -23" }],
+    links: ["Zero-point scale factor and zero point", "Symmetric quantization is centered around zero", "Absmax (absolute maximum) quantization"] },
+
+  { title: "Zero-point scale factor and zero point", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Scale uses the full span of the values; for INT8 the integer span is $127 - (-128) = 255$
+$$s = \frac{255}{\alpha - \beta}$$
+• The zero point shifts the integers so that $\beta$ lands on $-128$
+$$z = \operatorname{round}(-s \cdot \beta) - 2^{b-1}$$
+• Quantize: $$x_q = \operatorname{round}(s \cdot x + z)$$
+Worked example (FP32 → INT8):
+• Values: $[5.47,\ 3.08,\ -7.59,\ 0,\ -1.95,\ -4.57,\ 10.8]$, so $\alpha = 10.8$, $\beta = -7.59$
+• $s = 255 / 18.39 \approx 13.87$ and $z = \operatorname{round}(105.24) - 128 = -23$
+• Quantized: $[53,\ 20,\ -128,\ -23,\ -50,\ -86,\ 127]$`,
+    images: [{ src: "https://substack-post-media.s3.amazonaws.com/public/images/16cde2f6-aeb5-44d8-b056-846a5f1a0448_1096x508.png", caption: "Zero-point scale factor, zero point and quantization" }],
+    links: ["Dequantizing with zero-point", "Absmax scale factor"] },
+
+  { title: "Dequantizing with zero-point", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Undo the shift, then undo the scale
+$$\hat{x} = \frac{x_q - z}{s}$$`,
+    links: ["Quantization error", "Dequantizing with absmax"] },
 ];

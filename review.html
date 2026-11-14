@@ -55,6 +55,9 @@
   .foot { margin-top: 28px; color: var(--muted); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; }
   .foot button { padding: 4px 10px; font-size: 13px; }
   .hint { color: var(--muted); font-size: 12px; text-align: center; margin-top: 10px; }
+  figure.img { margin: 14px 0; }
+  figure.img img { width: 100%; height: auto; border-radius: 10px; background: #fff; border: 1px solid var(--border); }
+  figure.img figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js"></script>
@@ -102,7 +105,7 @@
 
   // Every note and glossary term becomes a card
   const CARDS = [
-    ...NOTES.map(n => ({ id: "n:" + slug(n.title), kind: "Note", title: n.title, content: n.content, tags: n.tags })),
+    ...NOTES.map(n => ({ id: "n:" + slug(n.title), kind: "Note", title: n.title, content: n.content, tags: n.tags, images: n.images, source: n.source })),
     ...TERMS.map(t => ({ id: "g:" + slug(t.term), kind: "Glossary", title: t.term,
       content: "• " + t.definition + (t.example ? "\n• e.g. " + t.example : ""), tags: t.tags || [] })),
   ];
@@ -160,6 +163,8 @@
         <div class="kind">${current.kind}${isNew ? " · new" : ""}</div>
         <h2>${esc(current.title)}</h2>
         <div id="ans" class="answer" hidden>${renderBody(current.content)}
+          ${(current.images || []).map(im => `<figure class="img"><img src="${esc(im.src)}" alt="${esc(im.caption || "")}" loading="lazy">
+        <figcaption>${esc(im.caption || "")}${current.source && SOURCES[current.source] ? ` · from ${esc(SOURCES[current.source].name)}` : ""}</figcaption></figure>`).join("")}
           <div class="chips">${current.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
         </div>
         <p class="prompt" id="ask">What do you remember about this? Say it in your head, then reveal.</p>

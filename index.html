@@ -75,6 +75,9 @@
   .nav a { padding: 6px 12px; border-radius: 8px; color: var(--muted); font-size: 14px; }
   .nav a:hover { text-decoration: none; background: var(--border); }
   .nav a.on { background: var(--text); color: var(--bg); }
+  figure.img { margin: 14px 0; }
+  figure.img img { width: 100%; height: auto; border-radius: 10px; background: #fff; border: 1px solid var(--border); }
+  figure.img figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js"></script>
@@ -188,6 +191,8 @@
       <h2>${esc(n.title)}</h2>
       <div class="chips">${n.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
       ${renderBody(n.content)}
+      ${(n.images || []).map(im => `<figure class="img"><img src="${esc(im.src)}" alt="${esc(im.caption || "")}" loading="lazy">
+        <figcaption>${esc(im.caption || "")}${n.source && SOURCES[n.source] ? ` · from ${esc(SOURCES[n.source].name)}` : ""}</figcaption></figure>`).join("")}
       ${src ? `<p>Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.name)} ↗</a> <span class="chip src">${esc(src.type)}</span></p>` : ""}
       ${related.length ? `<div class="links"><div class="section-label">Linked notes</div>
         ${related.map(t => `<a href="${href(t)}">${esc(t)}${termSet.has(t) ? " (glossary)" : ""}</a>`).join("")}</div>` : ""}`;
