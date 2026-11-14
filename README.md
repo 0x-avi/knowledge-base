@@ -23,3 +23,7 @@ Commit and push; GitHub Pages redeploys automatically.
 ## Glossary
 
 A second page at https://0x-avi.github.io/knowledge-base/glossary.html. Add a term by appending to `TERMS` in [`terms.js`](terms.js).
+
+## Review
+
+Daily spaced-repetition review at https://0x-avi.github.io/knowledge-base/review.html. Shows notes that are due plus up to 5 new ones a day. Progress is stored in your browser; use Export/Import to back it up or move devices.
