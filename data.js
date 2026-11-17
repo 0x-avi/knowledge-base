@@ -265,4 +265,84 @@ Worked example (FP32 → INT8):
 • Undo the shift, then undo the scale
 $$\hat{x} = \frac{x_q - z}{s}$$`,
     links: ["Quantization error", "Dequantizing with absmax"] },
+  { title: "Outliers stretch the quantization range", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Outliers are values far bigger (or smaller) than the rest
+• If the range is mapped to include them, most ordinary values get squeezed into the same or nearby integers, and their differences are lost`,
+    links: ["Clipping the range handles outliers", "Absmax (absolute maximum) quantization"] },
+
+  { title: "Clipping the range handles outliers", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Pick a smaller range than the full min–max; anything outside it is clipped to the range's edge
+• Outliers get a large error, but every other value gets a much smaller one`,
+    links: ["Calibration finds the range with the least quantization error", "Outliers stretch the quantization range"] },
+
+  { title: "Calibration finds the range with the least quantization error", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Calibration is the step that chooses the range: include as many values as possible while keeping the quantization error low`,
+    links: ["Three ways to calibrate the range", "Quantization error"] },
+
+  { title: "Three ways to calibrate the range", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Manually choose a percentile of the input range (behaves like clipping)
+• Minimize the mean squared error (MSE) between the original and quantized values
+• Minimize entropy: the KL divergence between the original and quantized values`,
+    links: ["Calibration finds the range with the least quantization error", "Clipping the range handles outliers"] },
+
+  { title: "Biases are kept in higher precision than weights", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• There are far fewer biases (millions) than weights (billions), so keeping biases in higher precision costs little
+• eg weights in INT8, biases in INT16; most quantization effort goes into the weights`,
+    links: ["Three ways to calibrate the range"] },
+
+  { title: "Activations change after every hidden layer", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Weights are fixed and known before inference; activations depend on the input and change at every layer
+• So their range can't be fixed once in advance; it is either computed during inference (dynamic) or estimated beforehand (static)`,
+    links: ["Dynamic quantization", "Static quantization"] },
+
+  { title: "PTQ vs QAT", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• PTQ (post-training quantization): quantize a model after it has been trained
+• QAT (quantization-aware training): account for quantization during training or fine-tuning`,
+    links: ["Dynamic quantization", "Static quantization", "GPTQ quantizes to 4 bits layer by layer"] },
+
+  { title: "Dynamic quantization", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• A PTQ method for activations: after data passes a hidden layer, collect its activations and compute the zero point $z$ and scale factor $s$ from them, during inference
+• Repeated for every layer, so each layer gets its own $z$ and $s$`,
+    links: ["Static vs dynamic quantization trade-off", "Activations change after every hidden layer", "Zero-point scale factor and zero point"] },
+
+  { title: "Static quantization", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• A PTQ method: compute $z$ and $s$ beforehand, not during inference
+• Run a calibration dataset through the model to collect the activation distributions, then reuse the same $z$ and $s$ at inference`,
+    links: ["Static vs dynamic quantization trade-off", "Calibration finds the range with the least quantization error"] },
+
+  { title: "Static vs dynamic quantization trade-off", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Dynamic is slightly more accurate: $z$ and $s$ fit the actual activations of each input
+• Static is faster: nothing extra is computed at inference time`,
+    links: ["Dynamic quantization", "Static quantization"] },
+
+  { title: "GPTQ quantizes to 4 bits layer by layer", tags: ["AI", "Quantization", "LLM"], source: "quant", content: String.raw`
+• One of the best-known 4-bit PTQ methods; keeps the full model on the GPU
+• Uses asymmetric quantization and processes each layer independently before moving to the next
+• Within a layer it quantizes weights one at a time, using the inverse Hessian to decide how to spread each weight's error`,
+    links: ["The inverse Hessian shows how important each weight is", "GPTQ redistributes the quantization error", "Zero-point quantization is asymmetric", "GGUF splits weights into blocks and can offload to CPU"] },
+
+  { title: "The inverse Hessian shows how important each weight is", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• The Hessian is the second-order derivative of the model's loss; it shows how sensitive the output is to changes in each weight
+• In the inverse Hessian, lower values mean more important weights: small changes to them move the output a lot`,
+    links: ["GPTQ redistributes the quantization error"] },
+
+  { title: "GPTQ redistributes the quantization error", tags: ["AI", "Quantization"], source: "quant", content: String.raw`
+• Quantize then dequantize the first weight $x_1$ to get $\hat{x}_1$, and weight the error by the inverse Hessian:
+$$q = \frac{x_1 - \hat{x}_1}{h_1}$$
+• Spread that error onto the remaining weights in the row, so the layer's output stays close to the original:
+$$x_2 \leftarrow x_2 + q \cdot h_2$$
+• Repeat weight by weight across the matrix
+• Example from the guide: $x_2 = 0.3 + 0.203 \cdot 0.8 = 0.4624$ and $x_3 = 0.1 + 0.203 \cdot 0.1 = 0.1203$
+• Note: the guide's example uses $q = 0.5 - 0.297 = 0.203$ without dividing by $h_1 = 0.2$`,
+    images: [
+      { src: "https://substack-post-media.s3.amazonaws.com/public/images/fd4b12b9-8b1b-4aa5-8d8c-ab8c1ab23671_1096x332.png", caption: "Hessian-weighted quantization error" },
+      { src: "https://substack-post-media.s3.amazonaws.com/public/images/86456fdb-ba8f-4545-aa45-a0f4d4c59362_1096x244.png", caption: "Updating the next weight with the weighted error" },
+      { src: "https://substack-post-media.s3.amazonaws.com/public/images/af47538b-4a3b-48df-9dbd-dded0ed09ce4_1284x438.png", caption: "Redistributing the error across the row" }],
+    links: ["The inverse Hessian shows how important each weight is", "Quantization error", "GPTQ quantizes to 4 bits layer by layer"] },
+
+  { title: "GGUF splits weights into blocks and can offload to CPU", tags: ["AI", "Quantization", "LLM"], source: "quant", content: String.raw`
+• A popular 4-bit approach for when the full model doesn't fit in VRAM: any layer can be offloaded to the CPU
+• Splits each layer's weights into "super" blocks of "sub" blocks and quantizes each sub block with absmax
+• The sub blocks' scale factors are themselves quantized using the super block's scale factor`,
+    links: ["Absmax (absolute maximum) quantization", "GPTQ quantizes to 4 bits layer by layer"] },
 ];
